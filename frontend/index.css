@@ -1,0 +1,338 @@
+:root {
+    /* Color Palette - Code Review Agent Theme */
+    --bg-dark: #0a0e1a;
+    --bg-darker: #060911;
+    --surface-dark: #141b2d;
+    --surface-glass: rgba(20, 27, 45, 0.7);
+    --primary-blue: #5b8def;
+    --primary-purple: #a855f7;
+    --gradient-primary: linear-gradient(135deg, #5b8def, #a855f7);
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-active: rgba(91, 141, 239, 0.5);
+
+    /* Status Colors */
+    --critical: #ef4444;
+    --high: #f97316;
+    --medium: #eab308;
+    --low: #22c55e;
+
+    /* Fonts */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+    /* Spacing */
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-sm: 6px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Utilities */
+.glass-panel {
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+}
+
+.gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(91, 141, 239, 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(91, 141, 239, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--low);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(34, 197, 94, 0.2);
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 1rem;
+    transition: all 0.2s;
+    font-family: var(--font-sans);
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--border-active);
+    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.1);
+}
+
+textarea.input-field {
+    font-family: var(--font-mono);
+    resize: vertical;
+    min-height: 200px;
+}
+
+/* Badge Styles */
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.badge-critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--critical);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-high {
+    background: rgba(249, 115, 22, 0.1);
+    color: var(--high);
+    border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.badge-medium {
+    background: rgba(234, 179, 8, 0.1);
+    color: var(--medium);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.badge-low {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--low);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    font-size: 0.95rem;
+}
+
+.tab-btn:hover {
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    color: var(--primary-blue);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-primary);
+}
+
+/* Code Editor Styling */
+.code-editor-container {
+    background: #0d1117;
+    /* Very dark background for editor */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    min-height: 400px;
+    /* Enforce height */
+    max-height: 600px;
+}
+
+.code-line-marker {
+    width: 4px;
+    background: var(--primary-blue);
+    flex-shrink: 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 4px 4px 0;
+    height: 100px;
+    /* Just a visual indicator size */
+    opacity: 0.8;
+}
+
+.line-marker-green {
+    background: var(--low);
+}
+
+.code-editor-container pre {
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    background: transparent !important;
+    text-shadow: none !important;
+    flex: 1;
+    overflow: auto;
+    font-family: 'Fira Code', monospace !important;
+    font-size: 0.9rem !important;
+}
+
+.code-editor-container code {
+    background: transparent !important;
+    text-shadow: none !important;
+    font-family: inherit !important;
+}
+
+/* Scrollbar within editor */
+.code-editor-container pre::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.code-editor-container pre::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+
+.code-editor-container pre::-webkit-scrollbar-thumb {
+    background: #1f2937;
+    border-radius: 5px;
+}
+
+.code-editor-container pre::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+}
+
+/* Checkbox Styles */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.checkbox-label:hover {
+    color: var(--text-main);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-blue);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--surface-dark);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(91, 141, 239, 0.3);
+}

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Review Agent</title>
+    <link rel="stylesheet" href="index.css">
+    <style>
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--surface-dark);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--low);
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--low);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .review-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .panel {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-title svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary-blue);
+        }
+
+        .language-select {
+            width: 100%;
+            padding: 0.65rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+
+        .priority-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .priority-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .priority-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .priority-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .review-output {
+            background: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .sub-tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            margin-bottom: -0.55rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .sub-tab-btn.active {
+            color: var(--primary-blue);
+            border-bottom-color: var(--primary-blue);
+        }
+
+        .sub-tab-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .improvements-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .improvement-card {
+            background: rgba(34, 197, 94, 0.05);
+            /* Green tint */
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .check-icon {
+            background: #22c55e;
+            color: black;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .check-icon svg {
+            width: 12px;
+            height: 12px;
+            stroke-width: 3;
+        }
+
+        .improvement-content {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .improvement-content strong {
+            color: #4ade80;
+            /* Brighter green for title */
+            display: inline-block;
+            margin-bottom: 0.25rem;
+        }
+
+        .explanation-box {
+            background: rgba(91, 141, 239, 0.05);
+            border: 1px solid rgba(91, 141, 239, 0.2);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .explanation-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .improvement-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .how-it-works-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .step-card {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 968px) {
+
+            .review-layout,
+            .code-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .how-it-works-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo-section">
+                <img src="C:/Users/Raju/.gemini/antigravity/brain/db65b4aa-c089-4cd5-ac67-cddb7efa796a/robot_exact_background_1769840667579.png"
+                    alt="Logo" class="logo-icon">
+                <span class="logo-text">Code Review Agent</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Powered by AI</span>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                API Connected
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title gradient-text">Intelligent Code Review & Rewrite</h1>
+                <p class="hero-subtitle">Get instant feedback on your code. Identify bugs, performance issues, security
+                    vulnerabilities, and best practices. Then automatically rewrite it to fix everything.</p>
+            </div>
+
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('code-review')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="display: inline; margin-right: 0.25rem;">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    Code Review
+                </button>
+                <button class="tab-btn" onclick="switchTab('rewritten-code')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="display: inline; margin-right: 0.25rem;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Rewritten Code
+                </button>
+                <button class="tab-btn" onclick="switchTab('how-it-works')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="display: inline; margin-right: 0.25rem;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    How It Works
+                </button>
+            </div>
+
+            <!-- Code Review Tab -->
+            <div id="code-review" class="tab-content active">
+                <div class="review-layout">
+                    <div class="panel">
+                        <h3 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            Your Code
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Paste code you
+                            want reviewed</p>
+
+                        <label
+                            style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Language</label>
+                        <select id="language" class="language-select">
+                            <option value="Python">Python</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="Java">Java</option>
+                            <option value="C++">C++</option>
+                            <option value="Go">Go</option>
+                            <option value="Rust">Rust</option>
+                            <option value="TypeScript">TypeScript</option>
+                        </select>
+
+                        <label
+                            style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Code</label>
+                        <textarea id="code-input" class="input-field"
+                            placeholder="import sqlite3&#10;&#10;def get_user_by_username(username):&#10;    conn = sqlite3.connect('users.db')&#10;    cursor = conn.cursor()&#10;    query = f&quot;SELECT * FROM users WHERE username = '{username}'&quot;&#10;    cursor.execute(query)&#10;    result = cursor.fetchone()&#10;    conn.close()&#10;    return result"></textarea>
+
+                        <label
+                            style="font-size: 0.85rem; color: var(--text-muted); display: block; margin: 1rem 0 0.75rem;">Focus
+                            Areas</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> Bugs
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> Performance
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> Security
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> Best Practices
+                            </label>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn-primary" onclick="reviewCode()" style="flex: 1;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                Review Code
+                            </button>
+                            <button class="btn-secondary" onclick="fixAndRewrite()" style="flex: 1;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Fix & Rewrite Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Review Results
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Detailed analysis
+                            and recommendations</p>
+
+                        <div class="priority-grid">
+                            <div class="priority-card">
+                                <div class="priority-label">Critical</div>
+                                <div class="priority-count" style="color: var(--critical);" id="critical-count">0</div>
+                            </div>
+                            <div class="priority-card">
+                                <div class="priority-label">High</div>
+                                <div class="priority-count" style="color: var(--high);" id="high-count">0</div>
+                            </div>
+                            <div class="priority-card">
+                                <div class="priority-label">Medium</div>
+                                <div class="priority-count" style="color: var(--medium);" id="medium-count">0</div>
+                            </div>
+                            <div class="priority-card">
+                                <div class="priority-label">Low</div>
+                                <div class="priority-count" style="color: var(--low);" id="low-count">0</div>
+                            </div>
+                        </div>
+
+                        <div class="sub-tabs">
+                            <button class="sub-tab-btn active">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="currentColor"></rect>
+                                </svg>
+                                Review
+                            </button>
+                            <button class="sub-tab-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M12 2a5 5 0 0 1 5 5c0 1.33-.53 2.53-1.42 3.42C14.11 11.89 13 13.9 13 16h-2c0-2.1-1.11-4.11-2.58-5.58A4.99 4.99 0 0 1 12 2z">
+                                    </path>
+                                    <path d="M10 20h4"></path>
+                                    <line x1="12" y1="22" x2="12" y2="22"></line>
+                                </svg>
+                                Suggestions
+                            </button>
+                        </div>
+
+                        <div id="review-output" class="review-output">
+                            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                                Click "Review Code" to analyze your code...
+                            </p>
+                        </div>
+
+                        <button class="btn-primary" onclick="copyReview()" style="width: 100%; margin-top: 1rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy Review
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rewritten Code Tab -->
+            <div id="rewritten-code" class="tab-content">
+                <div class="code-comparison">
+                    <div class="panel">
+                        <h3 class="panel-title">
+                            <span
+                                style="color: #ef4444; font-family: monospace; font-weight: 800; font-size: 1.25rem;">&lt;/&gt;</span>
+                            Original Code
+                        </h3>
+                        <div class="code-editor-container">
+                            <div class="code-line-marker"></div>
+                            <pre><code id="original-code" class="language-python"># Your original code will appear here...</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3 class="panel-title">
+                            <span
+                                style="color: #22c55e; font-family: monospace; font-weight: 800; font-size: 1.25rem;">&lt;/&gt;</span>
+                            Rewritten Code
+                        </h3>
+                        <div class="code-editor-container">
+                            <div class="code-line-marker line-marker-green"></div>
+                            <pre><code id="rewritten-code-display" class="language-python"># Improved code will appear here after rewriting...</code></pre>
+                        </div>
+                        <button class="btn-primary" onclick="copyRewrittenCode()"
+                            style="width: 100%; margin-top: 1rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy Rewritten Code
+                        </button>
+                    </div>
+                </div>
+
+                <div class="improvements-section">
+                    <h3 class="panel-title" style="margin-bottom: 1.5rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        Key Improvements
+                    </h3>
+                    <div class="improvements-grid">
+                        <div class="improvement-card">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="improvement-content">
+                                <strong>Type Hints:</strong> Added type hints for method parameters and return types to
+                                improve code readability and enable static type checking.
+                            </div>
+                        </div>
+                        <div class="improvement-card">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="improvement-content">
+                                <strong>Docstrings:</strong> Included docstrings to provide documentation for the class
+                                and its methods, making it easier for others to understand the code.
+                            </div>
+                        </div>
+                        <div class="improvement-card">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="improvement-content">
+                                <strong>Clear Naming Conventions:</strong> Used descriptive and consistent naming
+                                conventions for variables, methods, and classes to enhance code readability.
+                            </div>
+                        </div>
+                        <div class="improvement-card">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="improvement-content">
+                                <strong>Example Usage:</strong> Provided example usage in the `if __name__ ==
+                                "__main__":` block to demonstrate how to use the class and its methods.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="explanation-box">
+                        <div class="explanation-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Explanation
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                            Since no original code was provided, I created a simple example of a production-ready Python
+                            class. This class includes example methods for greeting and adding numbers, demonstrating
+                            good practices such as type hints, docstrings, and clear naming conventions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works Tab -->
+            <div id="how-it-works" class="tab-content">
+                <div class="how-it-works-grid">
+                    <div class="step-card animate-fade-in">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Paste Your Code</h3>
+                        <p class="step-description">Select your programming language, paste the code you want reviewed,
+                            and choose focus areas like bugs, performance, or security.</p>
+                    </div>
+                    <div class="step-card animate-fade-in" style="animation-delay: 0.1s;">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">Get Instant Review</h3>
+                        <p class="step-description">AI analyzes your code for bugs, performance issues, security
+                            vulnerabilities, and best practices. Get detailed feedback categorized by priority.</p>
+                    </div>
+                    <div class="step-card animate-fade-in" style="animation-delay: 0.2s;">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">Auto-Rewrite</h3>
+                        <p class="step-description">Get production-ready code that fixes all specified issues. AI
+                            rewrites your code to address bugs, improve performance, and follow best practices.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.closest('.tab-btn').classList.add('active');
+        }
+
+        async function reviewCode() {
+            const code = document.getElementById('code-input').value;
+            const language = document.getElementById('language').value;
+            const focusAreas = Array.from(document.querySelectorAll('.checkbox-label input:checked'))
+                .map(cb => cb.parentElement.textContent.trim());
+
+            if (!code.trim()) {
+                alert('Please enter some code to review');
+                return;
+            }
+
+            const reviewOutput = document.getElementById('review-output');
+            reviewOutput.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Analyzing your code...</p>';
+
+            try {
+                const response = await fetch('/api/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, language, focus_areas: focusAreas })
+                });
+
+                const data = await response.json();
+                reviewOutput.textContent = data.review;
+
+                // Update priority counts (simplified)
+                document.getElementById('critical-count').textContent = (data.review.match(/Critical/gi) || []).length;
+                document.getElementById('high-count').textContent = (data.review.match(/High Priority/gi) || []).length;
+                document.getElementById('medium-count').textContent = (data.review.match(/Medium Priority/gi) || []).length;
+                document.getElementById('low-count').textContent = (data.review.match(/Low Priority/gi) || []).length;
+
+                // Store for rewritten code tab
+                const originalCodeEl = document.getElementById('original-code');
+                originalCodeEl.textContent = code;
+                // Update language class dynamically
+                originalCodeEl.className = `language-${language.toLowerCase()}`;
+
+                if (data.rewritten_code) {
+                    const rewrittenCodeEl = document.getElementById('rewritten-code-display');
+                    rewrittenCodeEl.textContent = data.rewritten_code;
+                    rewrittenCodeEl.className = `language-${language.toLowerCase()}`;
+                }
+
+                // Re-run highlighting
+                if (window.Prism) {
+                    Prism.highlightAll();
+                }
+            } catch (error) {
+                reviewOutput.innerHTML = '<p style="color: var(--critical);">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function fixAndRewrite() {
+            await reviewCode();
+            switchTab('rewritten-code');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+        }
+
+        function copyReview() {
+            const text = document.getElementById('review-output').textContent;
+            navigator.clipboard.writeText(text);
+            alert('Review copied to clipboard!');
+        }
+
+        function copyRewrittenCode() {
+            const text = document.getElementById('rewritten-code-display').textContent;
+            navigator.clipboard.writeText(text);
+            alert('Rewritten code copied to clipboard!');
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-typescript.min.js"></script>
+</body>
+
+</html>
